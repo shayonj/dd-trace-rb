@@ -11,17 +11,27 @@ module Datadog
       @registry = options.fetch(:registry, Datadog.registry)
     end
 
-    def [](integration_name)
+    def [](integration_name, configuration_name = :default)
       integration = fetch_integration(integration_name)
-      Proxy.new(integration)
+
+      if integration.class <= Datadog::Contrib::Integration
+        integration.configuration(configuration_name)
+      else
+        Proxy.new(integration)
+      end
     end
 
-    def use(integration_name, options = {})
+    def use(integration_name, options = {}, &block)
       integration = fetch_integration(integration_name)
-      settings = Proxy.new(integration)
 
-      integration.sorted_options.each do |name|
-        settings[name] = options.fetch(name, settings[name])
+      if integration.class <= Datadog::Contrib::Integration
+        configuration_name = options[:describes] || :default
+        integration.configure(configuration_name, options, &block)
+      else
+        settings = Proxy.new(integration)
+        integration.sorted_options.each do |name|
+          settings[name] = options.fetch(name, settings[name])
+        end
       end
 
       integration.patch if integration.respond_to?(:patch)
