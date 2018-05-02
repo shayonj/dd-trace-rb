@@ -17,7 +17,7 @@ module Datadog
             # Setup configuration for this database
             pin = Datadog::Pin.new(
               Datadog.configuration[:sequel][:service_name] || adapter_name,
-              app: Patcher::APP,
+              app: Integration::APP,
               app_type: Datadog::Ext::AppTypes::DB,
               tracer: Datadog.configuration[:sequel][:tracer] || Datadog.tracer
             )
