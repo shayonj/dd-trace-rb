@@ -19,10 +19,6 @@ RSpec.describe 'ActiveRecord instrumentation' do
     end
   end
 
-  after(:each) do
-    Datadog.configuration[:active_record].reset_options!
-  end
-
   it 'calls the instrumentation when is used standalone' do
     Article.count
     spans = tracer.writer.spans
@@ -30,6 +26,7 @@ RSpec.describe 'ActiveRecord instrumentation' do
 
     # expect service and trace is sent
     expect(spans.size).to eq(1)
+    expect(services).to_not be_empty
     expect(services['mysql2']).to eq({'app'=>'active_record', 'app_type'=>'db'})
 
     span = spans[0]
@@ -54,7 +51,6 @@ RSpec.describe 'ActiveRecord instrumentation' do
     let(:query_span) { spans.first }
 
     context 'is not set' do
-      let(:configuration_options) { super().merge({ service_name: nil }) }
       it { expect(query_span.service).to eq('mysql2') }
     end
 
